@@ -77,7 +77,7 @@ function toCard(item: TMDBItem, platform?: 'netflix' | 'hbo'): MovieCardData {
 
 function determinePlatform(providerIds: number[]): 'netflix' | 'hbo' | undefined {
   if (providerIds.includes(8)) return 'netflix'
-  if (providerIds.includes(384) || providerIds.includes(1899)) return 'hbo'
+  if (providerIds.includes(1899) || providerIds.includes(384)) return 'hbo'
   return undefined
 }
 
@@ -88,8 +88,8 @@ export async function getHomeData() {
     tmdbFetch('/trending/movie/week'),
     tmdbFetch('/discover/movie', { with_watch_providers: '8', watch_region: 'TH', sort_by: 'popularity.desc' }),
     tmdbFetch('/discover/tv', { with_watch_providers: '8', watch_region: 'TH', sort_by: 'popularity.desc' }),
-    tmdbFetch('/discover/movie', { with_watch_providers: '384', watch_region: 'TH', sort_by: 'popularity.desc' }),
-    tmdbFetch('/discover/tv', { with_watch_providers: '384', watch_region: 'TH', sort_by: 'popularity.desc' }),
+    tmdbFetch('/discover/movie', { with_watch_providers: '1899', watch_region: 'TH', sort_by: 'popularity.desc' }),
+    tmdbFetch('/discover/tv', { with_watch_providers: '1899', watch_region: 'TH', sort_by: 'popularity.desc' }),
   ])
 
   const netflixIds = new Set<number>(netflixMovies.results.map((m: TMDBItem) => m.id))
@@ -129,12 +129,12 @@ export async function getTrending(platform: 'all' | 'netflix' | 'hbo', page = 1)
     return (data.results as TMDBItem[]).map(m => toCard(m, 'netflix'))
   }
   if (platform === 'hbo') {
-    const data = await tmdbFetch('/discover/movie', { with_watch_providers: '384', watch_region: 'TH', sort_by: 'popularity.desc', page: String(page) })
+    const data = await tmdbFetch('/discover/movie', { with_watch_providers: '1899', watch_region: 'TH', sort_by: 'popularity.desc', page: String(page) })
     return (data.results as TMDBItem[]).map(m => toCard(m, 'hbo'))
   }
   const [netflix, hbo] = await Promise.all([
     tmdbFetch('/discover/movie', { with_watch_providers: '8', watch_region: 'TH', sort_by: 'popularity.desc', page: String(page) }),
-    tmdbFetch('/discover/movie', { with_watch_providers: '384', watch_region: 'TH', sort_by: 'popularity.desc', page: String(page) }),
+    tmdbFetch('/discover/movie', { with_watch_providers: '1899', watch_region: 'TH', sort_by: 'popularity.desc', page: String(page) }),
   ])
   const result: MovieCardData[] = []
   const nCards = (netflix.results as TMDBItem[]).map(m => toCard(m, 'netflix'))
@@ -160,7 +160,7 @@ export async function getDiscover(platform: 'all' | 'netflix' | 'hbo') {
   const [pop, netflixTop, hboTop] = await Promise.all([
     tmdbFetch('/trending/movie/week'),
     tmdbFetch('/discover/movie', { with_watch_providers: '8', watch_region: 'TH', sort_by: 'popularity.desc' }),
-    tmdbFetch('/discover/movie', { with_watch_providers: '384', watch_region: 'TH', sort_by: 'popularity.desc' }),
+    tmdbFetch('/discover/movie', { with_watch_providers: '1899', watch_region: 'TH', sort_by: 'popularity.desc' }),
   ])
   const netflixIds = new Set<number>(netflixTop.results.map((m: TMDBItem) => m.id))
   const hboIds = new Set<number>(hboTop.results.map((m: TMDBItem) => m.id))
@@ -237,7 +237,7 @@ export async function discoverByGenre(genre: string, platform: 'all' | 'netflix'
   if (genreId) params.with_genres = String(genreId)
   if (platform === 'netflix') params.with_watch_providers = '8'
   else if (platform === 'hbo') params.with_watch_providers = '384'
-  else params.with_watch_providers = '8|384'
+  else params.with_watch_providers = '8|1899'
 
   const data = await tmdbFetch('/discover/movie', params)
   const p = platform === 'all' ? undefined : platform
