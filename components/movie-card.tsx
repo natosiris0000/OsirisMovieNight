@@ -12,15 +12,17 @@ interface MovieCardProps {
   rating: number
   platform?: "netflix" | "hbo"
   posterUrl: string | null
+  mediaType?: "movie" | "tv"
 }
 
-export function MovieCard({ id, title, year, rating, platform, posterUrl }: MovieCardProps) {
+export function MovieCard({ id, title, year, rating, platform, posterUrl, mediaType }: MovieCardProps) {
+  const detailHref = id ? (mediaType === "tv" ? `/tv/${id}` : `/movie/${id}`) : "#"
   const [isFavorited, setIsFavorited] = useState(false)
   const [isWantToWatch, setIsWantToWatch] = useState(false)
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-lg bg-card transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/10">
-      <Link href={id ? `/movie/${id}` : "#"} className="aspect-[2/3] relative overflow-hidden block">
+      <Link href={detailHref} className="aspect-[2/3] relative overflow-hidden block">
         {posterUrl ? (
           <img
             src={posterUrl}
@@ -84,7 +86,7 @@ export function MovieCard({ id, title, year, rating, platform, posterUrl }: Movi
         </div>
       </Link>
 
-      <Link href={id ? `/movie/${id}` : "#"} className="flex flex-col gap-1 p-3">
+      <Link href={detailHref} className="flex flex-col gap-1 p-3">
         <h3 className="font-semibold text-sm text-foreground truncate">{title}</h3>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{year}</span>

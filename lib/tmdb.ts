@@ -61,9 +61,10 @@ export interface MovieCardData {
   rating: number
   platform?: 'netflix' | 'hbo'
   posterUrl: string | null
+  mediaType?: 'movie' | 'tv'
 }
 
-function toCard(item: TMDBItem, platform?: 'netflix' | 'hbo'): MovieCardData {
+function toCard(item: TMDBItem, platform?: 'netflix' | 'hbo', mediaType?: 'movie' | 'tv'): MovieCardData {
   const date = item.release_date || item.first_air_date || ''
   return {
     id: item.id,
@@ -72,6 +73,7 @@ function toCard(item: TMDBItem, platform?: 'netflix' | 'hbo'): MovieCardData {
     rating: Math.round(item.vote_average * 10) / 10,
     platform,
     posterUrl: posterUrl(item.poster_path),
+    mediaType,
   }
 }
 
@@ -115,9 +117,9 @@ export async function getHomeData() {
     } : null,
     trending: trendingCards,
     netflixMovies: (netflixMovies.results as TMDBItem[]).slice(0, 10).map(m => toCard(m, 'netflix')),
-    netflixSeries: (netflixSeries.results as TMDBItem[]).slice(0, 10).map(m => toCard(m, 'netflix')),
+    netflixSeries: (netflixSeries.results as TMDBItem[]).slice(0, 10).map(m => toCard(m, 'netflix', 'tv')),
     hboMovies: (hboMovies.results as TMDBItem[]).slice(0, 10).map(m => toCard(m, 'hbo')),
-    hboSeries: (hboSeries.results as TMDBItem[]).slice(0, 10).map(m => toCard(m, 'hbo')),
+    hboSeries: (hboSeries.results as TMDBItem[]).slice(0, 10).map(m => toCard(m, 'hbo', 'tv')),
   }
 }
 
@@ -177,8 +179,9 @@ export async function getDiscover(platform: 'all' | 'netflix' | 'hbo') {
 // ─── Movie Detail ────────────────────────────────────────────────────────────
 
 export async function getMovieDetail(id: number) {
-  const [detail, credits, similar, providers, videos] = await Promise.all([
+  const [detail, detailTh, credits, similar, providers, videos] = await Promise.all([
     tmdbFetch(`/movie/${id}`),
+    tmdbFetch(`/movie/${id}`, { language: 'th-TH' }),
     tmdbFetch(`/movie/${id}/credits`),
     tmdbFetch(`/movie/${id}/similar`),
     tmdbFetch(`/movie/${id}/watch/providers`),
@@ -217,10 +220,65 @@ export async function getMovieDetail(id: number) {
     country: detail.production_countries?.[0]?.name || 'Unknown',
     language: detail.original_language?.toUpperCase() || 'Unknown',
     synopsis: detail.overview,
+    synopsisTh: detailTh.overview || '',
     posterUrl: posterUrl(detail.poster_path),
     backdropUrl: backdropUrl(detail.backdrop_path),
     cast,
     similar: similarMovies,
+    trailerUrl,
+  }
+}
+
+// ─── TV Detail ───────────────────────────────────────────────────────────────
+
+export async function getTVDetail(id: number) {
+  const [detail, detailTh, credits, similar, providers, videos] = await Promise.all([
+    tmdbFetch(`/tv/${id}`),
+    tmdbFetch(`/tv/${id}`, { language: 'th-TH' }),
+    tmdbFetch(`/tv/${id}/credits`),
+    tmdbFetch(`/tv/${id}/similar`),
+    tmdbFetch(`/tv/${id}/watch/providers`),
+    tmdbFetch(`/tv/${id}/videos`),
+  ])
+
+  const thProviders = providers.results?.TH
+  const flatrateIds = (thProviders?.flatrate || []).map((p: { provider_id: number }) => p.provider_id)
+  const platform = determinePlatform(flatrateIds)
+
+  const genres: string[] = (detail.genres || []).map((g: { name: string }) => g.name)
+  const episodeRuntime = detail.episode_run_time?.[0]
+  const runtime = episodeRuntime ? `${episodeRuntime}m / ep` : 'N/A'
+  const year = detail.first_air_date ? parseInt(detail.first_air_date.slice(0, 4)) : 0
+
+  const cast = (credits.cast || []).slice(0, 8).map((c: { name: string; character: string; profile_path: string | null }) => ({
+    name: c.name,
+    role: c.character,
+    avatarUrl: c.profile_path ? `${TMDB_IMAGE}/w185${c.profile_path}` : null,
+  }))
+
+  const similarShows = (similar.results || []).slice(0, 6).map((m: TMDBItem) => toCard(m, platform, 'tv'))
+
+  const trailer = (videos.results || []).find(
+    (v: { type: string; site: string; key: string }) => v.type === 'Trailer' && v.site === 'YouTube'
+  )
+  const trailerUrl = trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null
+
+  return {
+    id: detail.id,
+    title: detail.name,
+    year,
+    rating: Math.round(detail.vote_average * 10) / 10,
+    platform,
+    runtime,
+    genres,
+    country: detail.origin_country?.[0] || 'Unknown',
+    language: detail.original_language?.toUpperCase() || 'Unknown',
+    synopsis: detail.overview,
+    synopsisTh: detailTh.overview || '',
+    posterUrl: posterUrl(detail.poster_path),
+    backdropUrl: backdropUrl(detail.backdrop_path),
+    cast,
+    similar: similarShows,
     trailerUrl,
   }
 }

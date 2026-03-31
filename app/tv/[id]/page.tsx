@@ -10,7 +10,7 @@ import { BottomNav } from '@/components/bottom-nav'
 import { MovieRow } from '@/components/movie-row'
 import { cn } from '@/lib/utils'
 
-interface MovieDetail {
+interface TVDetail {
   id: number
   title: string
   year: number
@@ -25,22 +25,22 @@ interface MovieDetail {
   posterUrl: string | null
   backdropUrl: string | null
   cast: { name: string; role: string; avatarUrl: string | null }[]
-  similar: { id: number; title: string; year: number; rating: number; platform?: 'netflix' | 'hbo'; posterUrl: string }[]
+  similar: { id: number; title: string; year: number; rating: number; platform?: 'netflix' | 'hbo'; posterUrl: string; mediaType?: 'movie' | 'tv' }[]
   trailerUrl: string | null
 }
 
-export default function MovieDetailPage() {
+export default function TVDetailPage() {
   const params = useParams()
   const id = params.id as string
 
-  const [movie, setMovie] = useState<MovieDetail | null>(null)
+  const [show, setShow] = useState<TVDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [isSaved, setIsSaved] = useState(false)
   const [isWantToWatch, setIsWantToWatch] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
-  const [synopsisLang, setSynopsisLang] = useState<'en' | 'th'>('en')
   const [userRating, setUserRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
+  const [synopsisLang, setSynopsisLang] = useState<'en' | 'th'>('en')
 
   useEffect(() => {
     if (!id) return
@@ -48,9 +48,9 @@ export default function MovieDetailPage() {
     setIsExpanded(false)
     setUserRating(0)
     setSynopsisLang('en')
-    fetch(`/api/tmdb/movie/${id}`)
+    fetch(`/api/tmdb/tv/${id}`)
       .then(r => r.json())
-      .then(data => { if (!data.error) setMovie(data) })
+      .then(data => { if (!data.error) setShow(data) })
       .finally(() => setLoading(false))
   }, [id])
 
@@ -69,11 +69,11 @@ export default function MovieDetailPage() {
     )
   }
 
-  if (!movie) {
+  if (!show) {
     return (
       <div className="min-h-screen bg-background pb-20 sm:pb-0 flex items-center justify-center">
         <Navbar />
-        <p className="text-muted-foreground">Movie not found.</p>
+        <p className="text-muted-foreground">Series not found.</p>
         <BottomNav />
       </div>
     )
@@ -93,10 +93,10 @@ export default function MovieDetailPage() {
             <ChevronLeft className="w-4 h-4" />
             Back
           </Link>
-          {movie.backdropUrl ? (
+          {show.backdropUrl ? (
             <Image
-              src={movie.backdropUrl}
-              alt={movie.title}
+              src={show.backdropUrl}
+              alt={show.title}
               fill
               className="object-cover object-top"
               crossOrigin="anonymous"
@@ -108,11 +108,11 @@ export default function MovieDetailPage() {
 
           <div className="absolute bottom-0 left-0 right-0 px-4 pb-6">
             <div className="flex gap-4 items-end">
-              {movie.posterUrl && (
+              {show.posterUrl && (
                 <div className="flex-shrink-0">
                   <Image
-                    src={movie.posterUrl}
-                    alt={movie.title ?? 'Movie poster'}
+                    src={show.posterUrl}
+                    alt={show.title ?? 'Series poster'}
                     width={112}
                     height={168}
                     className="rounded-lg shadow-lg object-cover"
@@ -121,32 +121,32 @@ export default function MovieDetailPage() {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{movie.title}</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{show.title}</h1>
                 <div className="text-xs text-muted-foreground mb-3 flex flex-wrap gap-1">
-                  <span>{movie.year}</span>
+                  <span>{show.year}</span>
                   <span>·</span>
-                  <span>{movie.runtime}</span>
+                  <span>{show.runtime}</span>
                   <span>·</span>
-                  <span>{movie.country}</span>
+                  <span>{show.country}</span>
                   <span>·</span>
-                  <span>{movie.language}</span>
+                  <span>{show.language}</span>
                 </div>
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {(movie.genres ?? []).map((genre) => (
+                  {(show.genres ?? []).map((genre) => (
                     <span key={genre} className="bg-secondary text-xs rounded-full px-2 py-0.5 text-muted-foreground">
                       {genre}
                     </span>
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  {movie.platform && (
-                    <span className={cn('text-white text-xs font-bold px-3 py-1 rounded', movie.platform === 'netflix' ? 'bg-netflix' : 'bg-hbo')}>
-                      {movie.platform === 'netflix' ? 'Netflix' : 'HBO Max'}
+                  {show.platform && (
+                    <span className={cn('text-white text-xs font-bold px-3 py-1 rounded', show.platform === 'netflix' ? 'bg-netflix' : 'bg-hbo')}>
+                      {show.platform === 'netflix' ? 'Netflix' : 'HBO Max'}
                     </span>
                   )}
                   <div className="flex items-center gap-1 text-lg font-bold text-primary">
                     <Star className="w-5 h-5 fill-primary" />
-                    {movie.rating} / 10
+                    {show.rating} / 10
                   </div>
                 </div>
               </div>
@@ -182,9 +182,9 @@ export default function MovieDetailPage() {
               {isWantToWatch ? 'Listed' : 'Watchlist'}
             </span>
           </button>
-          {movie.trailerUrl ? (
+          {show.trailerUrl ? (
             <a
-              href={movie.trailerUrl}
+              href={show.trailerUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex flex-col items-center justify-center gap-1 w-16 h-14 border border-primary/60 bg-primary/10 rounded-xl hover:bg-primary/20 transition-colors"
@@ -235,7 +235,7 @@ export default function MovieDetailPage() {
         <section className="px-4 py-2">
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs uppercase font-semibold text-muted-foreground">Synopsis</div>
-            {movie.synopsisTh && (
+            {show.synopsisTh && (
               <div className="flex items-center gap-1 bg-secondary rounded-full p-0.5">
                 <button
                   onClick={() => setSynopsisLang('en')}
@@ -253,7 +253,7 @@ export default function MovieDetailPage() {
             )}
           </div>
           <p className={cn('text-sm text-foreground/90 leading-relaxed', !isExpanded && 'line-clamp-3')}>
-            {synopsisLang === 'th' && movie.synopsisTh ? movie.synopsisTh : movie.synopsis}
+            {synopsisLang === 'th' && show.synopsisTh ? show.synopsisTh : show.synopsis}
           </p>
           <button onClick={() => setIsExpanded(!isExpanded)} className="text-xs text-primary hover:text-primary/80 font-semibold mt-2">
             {isExpanded ? 'Show less' : 'Show more'}
@@ -264,26 +264,26 @@ export default function MovieDetailPage() {
         <section className="px-4 py-4">
           <div className="text-xs uppercase font-semibold text-muted-foreground mb-3">Details</div>
           <div className="grid grid-cols-2 gap-4">
-            <div><div className="text-xs text-muted-foreground">Genre</div><div className="text-sm text-foreground font-medium">{movie.genres?.[0] ?? '—'}</div></div>
-            <div><div className="text-xs text-muted-foreground">Country</div><div className="text-sm text-foreground font-medium">{movie.country}</div></div>
-            <div><div className="text-xs text-muted-foreground">Language</div><div className="text-sm text-foreground font-medium">{movie.language}</div></div>
-            <div><div className="text-xs text-muted-foreground">Runtime</div><div className="text-sm text-foreground font-medium">{movie.runtime}</div></div>
-            <div><div className="text-xs text-muted-foreground">Year</div><div className="text-sm text-foreground font-medium">{movie.year}</div></div>
-            {movie.platform && (
+            <div><div className="text-xs text-muted-foreground">Genre</div><div className="text-sm text-foreground font-medium">{show.genres?.[0] ?? '—'}</div></div>
+            <div><div className="text-xs text-muted-foreground">Country</div><div className="text-sm text-foreground font-medium">{show.country}</div></div>
+            <div><div className="text-xs text-muted-foreground">Language</div><div className="text-sm text-foreground font-medium">{show.language}</div></div>
+            <div><div className="text-xs text-muted-foreground">Runtime</div><div className="text-sm text-foreground font-medium">{show.runtime}</div></div>
+            <div><div className="text-xs text-muted-foreground">Year</div><div className="text-sm text-foreground font-medium">{show.year}</div></div>
+            {show.platform && (
               <div>
                 <div className="text-xs text-muted-foreground">Platform</div>
-                <div className="text-sm text-foreground font-medium">{movie.platform === 'netflix' ? 'Netflix' : 'HBO Max'}</div>
+                <div className="text-sm text-foreground font-medium">{show.platform === 'netflix' ? 'Netflix' : 'HBO Max'}</div>
               </div>
             )}
           </div>
         </section>
 
         {/* Cast */}
-        {(movie.cast ?? []).length > 0 && (
+        {(show.cast ?? []).length > 0 && (
           <section className="py-4">
             <div className="px-4 text-xs uppercase font-semibold text-muted-foreground mb-3">Cast</div>
             <div className="overflow-x-auto scrollbar-hide px-4 flex gap-4">
-              {(movie.cast ?? []).map((actor) => {
+              {(show.cast ?? []).map((actor) => {
                 const initials = actor.name.split(' ').map(n => n[0]).slice(0, 2).join('')
                 return (
                   <div key={actor.name} className="flex-none w-16">
@@ -307,10 +307,10 @@ export default function MovieDetailPage() {
         <section className="px-4 py-4">
           <div className="text-xs uppercase font-semibold text-muted-foreground mb-3">Where to Watch in Thailand</div>
           <div className="bg-card border border-border/40 rounded-xl p-4">
-            {movie.platform ? (
+            {show.platform ? (
               <div>
-                <div className={cn('font-bold text-lg', movie.platform === 'netflix' ? 'text-netflix' : 'text-hbo')}>
-                  {movie.platform === 'netflix' ? 'Netflix' : 'HBO Max'}
+                <div className={cn('font-bold text-lg', show.platform === 'netflix' ? 'text-netflix' : 'text-hbo')}>
+                  {show.platform === 'netflix' ? 'Netflix' : 'HBO Max'}
                 </div>
                 <div className="text-xs text-muted-foreground">Available in Thailand</div>
               </div>
@@ -321,9 +321,9 @@ export default function MovieDetailPage() {
         </section>
 
         {/* More Like This */}
-        {(movie.similar ?? []).length > 0 && (
+        {(show.similar ?? []).length > 0 && (
           <section className="py-4">
-            <MovieRow title="More Like This" movies={movie.similar} />
+            <MovieRow title="More Like This" movies={show.similar} />
           </section>
         )}
       </main>

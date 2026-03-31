@@ -11,6 +11,7 @@ interface Movie {
   rating: number
   platform?: "netflix" | "hbo"
   posterUrl: string
+  mediaType?: "movie" | "tv"
 }
 
 interface MovieRowProps {
@@ -53,6 +54,7 @@ export function MovieRow({ title, movies, accentColor, showRank = false, seeAllH
               rating={movie.rating}
               platform={movie.platform}
               posterUrl={movie.posterUrl}
+              mediaType={movie.mediaType}
             />
             {showRank && (
               <span
