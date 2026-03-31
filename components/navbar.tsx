@@ -17,7 +17,7 @@ export function Navbar() {
   const pathname = usePathname()
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="w-full border-b-2 border-border bg-background">
       <div className="container mx-auto flex h-14 items-center justify-between gap-4 px-4">
         <button onClick={() => router.push("/")} className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0">
           <span className="text-lg font-bold tracking-wide text-primary">Osiris Movie Night</span>

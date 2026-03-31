@@ -9,7 +9,7 @@ interface Movie {
   title: string
   year: number
   rating: number
-  platform: "netflix" | "hbo"
+  platform?: "netflix" | "hbo"
   posterUrl: string
 }
 
