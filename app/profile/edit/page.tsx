@@ -3,15 +3,19 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Camera, User, CheckCircle } from 'lucide-react'
+import { ChevronLeft, Camera, CheckCircle } from 'lucide-react'
 import { Navbar } from '@/components/navbar'
 import { cn } from '@/lib/utils'
 import { getProfile, saveProfile } from '@/lib/profile'
+import { useAuth } from '@/hooks/useAuth'
+import { updateAuthUser } from '@/lib/auth'
 
 const GENRES = ['Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War']
 
 export default function EditProfilePage() {
   const router = useRouter()
+  const { user } = useAuth()
+
   const [displayName, setDisplayName] = useState('')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -23,13 +27,14 @@ export default function EditProfilePage() {
 
   useEffect(() => {
     const profile = getProfile()
-    setDisplayName(profile.displayName)
+    // Prefer auth user values for name/email
+    setDisplayName(user?.displayName ?? profile.displayName)
+    setEmail(user?.email ?? profile.email)
     setUsername(profile.username)
-    setEmail(profile.email)
     setBio(profile.bio)
     setSelectedGenres(profile.genres)
     setPreferredPlatform(profile.preferredPlatform)
-  }, [])
+  }, [user])
 
   const toggleGenre = (genre: string) => {
     setSelectedGenres(prev =>
@@ -41,7 +46,10 @@ export default function EditProfilePage() {
 
   const handleSave = () => {
     setIsSaving(true)
+    // Save to profile store
     saveProfile({ displayName, username, email, bio, genres: selectedGenres, preferredPlatform })
+    // Update auth user name/email if signed in
+    if (user) updateAuthUser(user.id, { displayName, email })
     setTimeout(() => {
       setIsSaving(false)
       setSaved(true)
@@ -51,6 +59,8 @@ export default function EditProfilePage() {
       }, 800)
     }, 600)
   }
+
+  const initials = displayName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
 
   return (
     <div className="min-h-screen bg-background pb-40">
@@ -67,8 +77,8 @@ export default function EditProfilePage() {
 
         {/* Avatar */}
         <div className="flex flex-col items-center py-6">
-          <div className="relative w-24 h-24 rounded-full bg-secondary border-2 border-primary flex items-center justify-center">
-            <User className="w-10 h-10 text-primary" />
+          <div className="relative w-24 h-24 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center">
+            <span className="text-3xl font-black text-primary">{initials || '?'}</span>
             <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors">
               <Camera className="w-4 h-4 text-primary-foreground" />
             </button>
