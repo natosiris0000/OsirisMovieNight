@@ -86,8 +86,8 @@ function determinePlatform(providerIds: number[]): 'netflix' | 'hbo' | undefined
 // ─── Home ────────────────────────────────────────────────────────────────────
 
 export async function getHomeData() {
-  const [trending, netflixMovies, netflixSeries, hboMovies, hboSeries] = await Promise.all([
-    tmdbFetch('/trending/movie/week'),
+  const [trendingTH, netflixMovies, netflixSeries, hboMovies, hboSeries] = await Promise.all([
+    tmdbFetch('/discover/movie', { with_watch_providers: '8|1899', watch_region: 'TH', sort_by: 'popularity.desc' }),
     tmdbFetch('/discover/movie', { with_watch_providers: '8', watch_region: 'TH', sort_by: 'popularity.desc' }),
     tmdbFetch('/discover/tv', { with_watch_providers: '8', watch_region: 'TH', sort_by: 'popularity.desc' }),
     tmdbFetch('/discover/movie', { with_watch_providers: '1899', watch_region: 'TH', sort_by: 'popularity.desc' }),
@@ -97,7 +97,7 @@ export async function getHomeData() {
   const netflixIds = new Set<number>(netflixMovies.results.map((m: TMDBItem) => m.id))
   const hboIds = new Set<number>(hboMovies.results.map((m: TMDBItem) => m.id))
 
-  const trendingCards = (trending.results as TMDBItem[]).slice(0, 10).map(item => {
+  const trendingCards = (trendingTH.results as TMDBItem[]).slice(0, 10).map((item: TMDBItem) => {
     const platform = netflixIds.has(item.id) ? 'netflix' : hboIds.has(item.id) ? 'hbo' : undefined
     return toCard(item, platform as 'netflix' | 'hbo' | undefined)
   })
@@ -160,14 +160,14 @@ export async function searchContent(query: string, type: 'all' | 'movie' | 'seri
 
 export async function getDiscover(platform: 'all' | 'netflix' | 'hbo') {
   const [pop, netflixTop, hboTop] = await Promise.all([
-    tmdbFetch('/trending/movie/week'),
+    tmdbFetch('/discover/movie', { with_watch_providers: '8|1899', watch_region: 'TH', sort_by: 'popularity.desc' }),
     tmdbFetch('/discover/movie', { with_watch_providers: '8', watch_region: 'TH', sort_by: 'popularity.desc' }),
     tmdbFetch('/discover/movie', { with_watch_providers: '1899', watch_region: 'TH', sort_by: 'popularity.desc' }),
   ])
   const netflixIds = new Set<number>(netflixTop.results.map((m: TMDBItem) => m.id))
   const hboIds = new Set<number>(hboTop.results.map((m: TMDBItem) => m.id))
   return {
-    popular: (pop.results as TMDBItem[]).slice(0, 8).map(m => {
+    popular: (pop.results as TMDBItem[]).slice(0, 8).map((m: TMDBItem) => {
       const p = netflixIds.has(m.id) ? 'netflix' : hboIds.has(m.id) ? 'hbo' : undefined
       return toCard(m, p as 'netflix' | 'hbo' | undefined)
     }),
