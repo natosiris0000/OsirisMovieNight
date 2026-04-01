@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { Star, Heart, Bookmark } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useLibraryItem } from "@/hooks/useLibrary"
+import { toggleFavorite, toggleWatchlist } from "@/lib/library"
 
 interface MovieCardProps {
   id?: number
@@ -17,8 +18,24 @@ interface MovieCardProps {
 
 export function MovieCard({ id, title, year, rating, platform, posterUrl, mediaType }: MovieCardProps) {
   const detailHref = id ? (mediaType === "tv" ? `/tv/${id}` : `/movie/${id}`) : "#"
-  const [isFavorited, setIsFavorited] = useState(false)
-  const [isWantToWatch, setIsWantToWatch] = useState(false)
+  const libraryItem = useLibraryItem(id)
+
+  const isFavorited = libraryItem?.favorited ?? false
+  const isInWatchlist = libraryItem !== undefined
+
+  const itemData = id ? { id, title, year, rating, platform, posterUrl, mediaType } : undefined
+
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (!id || !itemData) return
+    toggleFavorite(id, itemData)
+  }
+
+  const handleWatchlist = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (!id || !itemData) return
+    toggleWatchlist(id, itemData)
+  }
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-lg bg-card transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/10">
@@ -47,10 +64,10 @@ export function MovieCard({ id, title, year, rating, platform, posterUrl, mediaT
           </div>
         )}
 
-        {/* Action Icons - always visible, active state shown */}
+        {/* Action Icons */}
         <div className="absolute bottom-2 left-2 flex flex-col gap-1.5">
           <button
-            onClick={(e) => { e.preventDefault(); setIsFavorited(!isFavorited) }}
+            onClick={handleFavorite}
             title="Add to Favorites"
             className={cn(
               "w-7 h-7 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors",
@@ -67,11 +84,11 @@ export function MovieCard({ id, title, year, rating, platform, posterUrl, mediaT
             />
           </button>
           <button
-            onClick={(e) => { e.preventDefault(); setIsWantToWatch(!isWantToWatch) }}
-            title="Want to Watch"
+            onClick={handleWatchlist}
+            title="Add to Watchlist"
             className={cn(
               "w-7 h-7 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors",
-              isWantToWatch
+              isInWatchlist
                 ? "bg-primary/90 shadow-lg shadow-primary/30"
                 : "bg-background/60 hover:bg-background/90"
             )}
@@ -79,7 +96,7 @@ export function MovieCard({ id, title, year, rating, platform, posterUrl, mediaT
             <Bookmark
               className={cn(
                 "w-3.5 h-3.5",
-                isWantToWatch ? "fill-white text-white" : "text-white/70"
+                isInWatchlist ? "fill-white text-white" : "text-white/70"
               )}
             />
           </button>
